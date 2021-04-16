@@ -2,68 +2,77 @@
 #define GRAFO_H
 
 #include <iostream>
-#include <list>  //lista para no
-#include <queue> // fila da busca
+#include <vector>
+#include <queue>
 
 using namespace std;
 
-class Grafo {
-	int tamanho; // número de vértices
+class No {
+    public:
+        int dado;
 
-    // cada vértice é um nó
-    // a posição 0 contem o dado e as demais os adjacentes
-	std::vector<std::list<int>> *listadeNos;
+        // lista de nós adjacentes
+        std::vector <No *> adjacentes;
+        bool foivisitado;
 
-public:
-	Grafo(int vertices) {
-        this->tamanho = vertices; // número de vértices       
-    }
-
-    void definirNo (int posicao, int dado) {
-        if(listadeNos[posicao].empty()) {
-            listadeNos[posicao].push_back(dado);
+        No(int elemento){
+            this->dado = elemento;
+            this->foivisitado = false;
         }
-    }
 
-	void adicionarAresta(int v1, int v2) {
-    // adiciona vértice v2 à lista de vértices no de v1 se não estiver vazio
-        if(!listadeNos[v1].empty()) {
-            listadeNos[v1].push_back(v2);
+        void adicionarAdjacente(No *alvo) {
+            adjacentes.push_back(alvo);
+
+            return;
         }
-    }
 
-	void buscaLargura(int vertice) {
-        queue<int> fila; // fila para visitar
-        bool visitados[tamanho]; // checks
-
-    // setar tudo no vetor para false
-        for(int i = 0; i < tamanho; i++) {
-            visitados[i] = false;
-        }
-		
-        printf("Visitando vertice %d \n", vertice);
-	    visitados[vertice] = true;
-
-	    while(true) {
-		    list<int>::iterator iterador;
-
-		    for(iterador = listadeNos[vertice].begin(); iterador != listadeNos[vertice].end(); iterador++) {
-			    if(!visitados[*iterador]) {
-                    printf("Visitando vertice %d \n", *iterador);
-				    visitados[*iterador] = true; 
-				    fila.push(*iterador); // bota na fila
+        bool eAdjacente (No *alvo) {
+            bool result = false;
+            for (size_t i = 0; i < adjacentes.size(); i++) {
+                if (adjacentes[i] == alvo) {
+                    result = true;
                 }
             }
 
-            // verifica se a fila NÃO está vazia
-            if(!fila.empty()) {
-                vertice = fila.front(); // obtém o primeiro elemento
-                fila.pop(); // remove da fila
-            } else {
-                break;
+            return result;
+        }
+};
+
+class Grafo {
+    public:
+        No *primeiro;
+        std::queue<No *> filaDeBusca;
+
+        Grafo(No *primeiro) {
+            this->primeiro = primeiro;
+            filaDeBusca.push(primeiro);
+        }
+
+        void adicionarAresta (No *origem, No *destino) {
+            if (!origem->eAdjacente(destino)) {  
+                origem->adicionarAdjacente(destino);
+                destino->adicionarAdjacente(origem);
             }
-	    }
-    }
+
+            return;
+        };
+
+        No *buscaLargura(int valor) {
+            No *resultado = nullptr;
+            
+            if (filaDeBusca.front()->dado == valor) {
+                resultado = filaDeBusca.front();
+                return resultado;
+            }
+            else {
+                for (size_t i = 0; i < filaDeBusca.front()->adjacentes.size(); i++) {
+                    filaDeBusca.push(filaDeBusca.front()->adjacentes[i]);
+                }
+                filaDeBusca.pop();
+                this->buscaLargura(valor);
+            }
+        }
+
 };
 
 #endif
